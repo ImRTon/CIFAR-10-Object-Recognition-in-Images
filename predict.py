@@ -4,6 +4,8 @@ import torch
 import lightning as L
 import json
 
+from pathlib import Path
+
 from network.model import SimmpleCNN
 from network.data import CIFAR10DataModule
 
@@ -18,8 +20,32 @@ def get_args():
 
 def main():
     args = get_args()
-    model = SimmpleCNN.load_from_checkpoint(args.checkpoint_path)
-    data_module = CIFAR10DataModule.load_from_checkpoint(args.checkpoint_path, label_path=args.label_path, data_dir=args.data_path)
+
+    label_path = Path(args.label_path)
+    if not label_path.exists():
+        print("Label file not found. Generating labels from data directory.")
+        with open(args.label_path, "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(["id", "label"])
+            for img_path in Path(args.data_path).glob("*.png"):
+                id = int(img_path.stem)
+                writer.writerow([id, "unknown"])
+                
+    config = {}
+    with open(args.config_path, "r") as f:
+        config = json.load(f)
+
+    model = SimmpleCNN.load_from_checkpoint(
+        args.checkpoint_path, 
+        num_classes=len(config["class_mapping"]), 
+        class_weights=config["class_weights"]
+    )
+    data_module = CIFAR10DataModule.load_from_checkpoint(
+        args.checkpoint_path, 
+        label_path=args.label_path, 
+        data_dir=args.data_path, 
+        num_classes=len(config["class_mapping"])
+    )
 
     trainer = L.Trainer()
 
@@ -29,12 +55,8 @@ def main():
     ids = []
     for batch in outputs:
         result, id = batch
-        results.extend(torch.max(result, dim=1).indices.cpu().numpy())
+        results.extend(result.cpu().numpy())
         ids.extend(id.cpu().numpy())
-
-    config = {}
-    with open(args.config_path, "r") as f:
-        config = json.load(f)
 
     if config["class_mapping"] is None:
         raise ValueError("class_mapping is not initialized")
