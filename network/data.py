@@ -97,9 +97,11 @@ class CIFAR10DataModule(L.LightningDataModule):
             labels = self.df_data["label"].to_list()
             paths = self.df_data["id"].apply(lambda x: self.data_dir / f"{x}.png")
             paths = paths.to_list()
+            self.test_paths = paths
         elif stage == "predict":
             paths = self.df_data["id"].apply(lambda x: self.data_dir / f"{x}.png")
             paths = paths.to_list()
+            self.predict_paths = paths
 
     def train_dataloader(self):
         return DataLoader(
@@ -196,6 +198,6 @@ class CIFARDataset(Dataset):
     def __getitem__(self, idx):
         image = Image.open(self.data_paths[idx]).convert("RGB")
         if self.labels is None:
-            return self.transform(image), self.data_paths[idx]
+            return self.transform(image), int(self.data_paths[idx].stem)
         else:
             return self.transform(image), torch.tensor(self.labels[idx])
