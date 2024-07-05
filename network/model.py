@@ -11,9 +11,9 @@ import json
 import torch
 
 ACTIVATION_FUNCTIONS = {
-    "relu": nn.ReLU(),
-    "leakyrelu": nn.LeakyReLU(),
-    "silu": nn.SiLU(),
+    "relu": nn.ReLU(inplace=True),
+    "leakyrelu": nn.LeakyReLU(inplace=True),
+    "silu": nn.SiLU(inplace=True),
     "sigmoid": nn.Sigmoid(),
     "gelu": nn.GELU(),
 }
@@ -26,7 +26,14 @@ def get_activation(act_func: str) -> nn.Module:
         raise ValueError(f"Activation function {act_func} is not implemented.")
 
 class ResidualBlock(nn.Module):
-    def __init__(self, input_channels: int, output_channels: int, kernel_size: int = 3, stride: int = 1) -> None:
+    def __init__(
+        self, 
+        input_channels: int, 
+        output_channels: int, 
+        kernel_size: int = 3, 
+        stride: int = 1,
+        act_func: str = "ReLU"
+    ) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(
             input_channels, 
@@ -37,7 +44,7 @@ class ResidualBlock(nn.Module):
             bias=False # BatchNorm2d has bias
         )
         self.bn1 = nn.BatchNorm2d(output_channels)
-        self.act1 = nn.ReLU(inplace=True)
+        self.act1 = get_activation(act_func)
         self.conv2 = nn.Conv2d(
             output_channels, 
             output_channels, 
@@ -47,7 +54,7 @@ class ResidualBlock(nn.Module):
             bias=False # BatchNorm2d has bias
         )
         self.bn2 = nn.BatchNorm2d(output_channels)
-        self.act2 = nn.ReLU(inplace=True)
+        self.act2 = get_activation(act_func)
 
         if stride != 1 or input_channels != output_channels:
             self.shortcut = nn.Sequential(
@@ -71,18 +78,17 @@ class SimpleResidualNet(nn.Module):
     def __init__(
         self, 
         num_class: int,
-        act_func: str = "SILU",
+        act_func: str = "GeLU",
     ) -> None:
         super().__init__()
         self.conv = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=3, bias=False)
         self.bn = nn.BatchNorm2d(32)
         self.act = get_activation(act_func)
         self.layer = nn.Sequential(
-            # ResidualBlock(16, 32, 3),
-            ResidualBlock(32, 64, 3, stride=1),
-            ResidualBlock(64, 128, 3, stride=2),
-            ResidualBlock(128, 256, 3, stride=2),
-            ResidualBlock(256, 512, 3, stride=2),
+            ResidualBlock(32, 64, 3, stride=1, act_func=act_func),
+            ResidualBlock(64, 128, 3, stride=2, act_func=act_func),
+            ResidualBlock(128, 256, 3, stride=2, act_func=act_func),
+            ResidualBlock(256, 512, 3, stride=2, act_func=act_func),
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
             nn.Linear(512, num_class),
