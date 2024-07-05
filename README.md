@@ -1,6 +1,8 @@
 # CIFAR-10 - Object Recognition in Images
 A simple image classification project using PyTorch Lightning with Deep Learning.
 
+[Kaggle Challenge Link](https://www.kaggle.com/competitions/cifar-10/)
+
 ## Training
 Arguments:
 ```bash
@@ -25,9 +27,9 @@ python predict.py -d "TEST_IMGS_PATH" -l "TEST_LABEL_PATH" -f "CONFIG_PATH" -c "
 * `c` - Path to the checkpoint file
 
 ## Results
-| Method              | Optimizer | Scheduler | Validation Accuracy  | Validation Accuracy  | Version |
-|---------------------|-----------|-----------|----------------------|----------------------|---------|
-| Simple Residual     | SGD       | OneCycleLR| 0.835                | 0.8247               | 13      |
-| Simple SiLU Residual| SGD       | OneCycleLR| 0.825                | -                    | 21      |
-| ResNet18            | SGD       | OneCycleLR| 0.927                | 0.9269               | 12      |
-| ResNet50            | SGD       | OneCycleLR| 0.953                | 0.9540               | 20      |
+| Method              | Optimizer | Scheduler | Validation Accuracy  | Test Accuracy  | Version |
+|---------------------|-----------|-----------|----------------------|----------------|---------|
+| Simple Residual     | SGD       | OneCycleLR| 0.835                | 0.8247         | 13      |
+| Simple SiLU Residual| SGD       | OneCycleLR| 0.825                | -              | 21      |
+| ResNet18            | SGD       | OneCycleLR| 0.927                | 0.9269         | 12      |
+| ResNet50            | SGD       | OneCycleLR| 0.953                | 0.9540         | 20      |
