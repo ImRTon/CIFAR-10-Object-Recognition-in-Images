@@ -197,7 +197,6 @@ class SimmpleCNN(L.LightningModule):
         return pred_labels, id
 
     def configure_optimizers(self):
-        # optimizer = optim.AdamW(self.parameters(), self.hparams.lr)
         optimizer = optim.SGD(
             self.parameters(), 
             self.hparams.lr, 
@@ -216,6 +215,3 @@ class SimmpleCNN(L.LightningModule):
             }
             
         }
-    
-    def count_accuracy(self, pred, target):
-        return (pred.argmax(dim=1) == target).float().mean()
