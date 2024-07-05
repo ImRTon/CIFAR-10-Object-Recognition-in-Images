@@ -25,6 +25,8 @@ class CIFAR10DataModule(L.LightningDataModule):
         class_weights: list[float] | None = None
     ):
         super().__init__()
+        self.save_hyperparameters()
+        
         self.data_dir = Path(data_dir)
         self.label_path = Path(label_path)
         self.split_ratio = split_ratio
@@ -74,7 +76,9 @@ class CIFAR10DataModule(L.LightningDataModule):
             self.data_config["class_weights"] = class_weights
             self.class_weights = class_weights
         else:
-            self.class_weights = self.data_config["class_weights"]
+            class_weights = self.data_config["class_weights"]
+            self.class_weights = class_weights
+            
         self.dump_config()
         
         self.save_hyperparameters()
@@ -91,7 +95,7 @@ class CIFAR10DataModule(L.LightningDataModule):
             paths = paths.to_list()
 
             self.train_paths, self.val_paths, self.train_labels, self.val_labels = train_test_split(
-                paths, labels, train_size=self.split_ratio)
+                paths, labels, train_size=self.split_ratio, random_state=42)
 
         elif stage == "test":
             labels = self.df_data["label"].to_list()
