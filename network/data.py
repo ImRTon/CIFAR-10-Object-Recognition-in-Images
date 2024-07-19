@@ -69,10 +69,14 @@ class CIFAR10DataModule(L.LightningDataModule):
 
         self.df_data["label"] = self.df_data["label"].map(self.data_config["class_mapping"])
         if "class_weights" not in self.data_config or self.data_config["class_weights"] is None:
-            class_weights = self.df_data["label"].value_counts(normalize=True).sort_index()
-            class_weights = num_classes * class_weights
-            class_weights = class_weights.to_list()
-            class_weights = [max(0.1, min(class_weight, 10)) for class_weight in class_weights]
+            class_counts = self.df_data["label"].value_counts()
+            class_freq = class_counts / class_counts.sum()
+
+            class_weights = 1.0 / class_freq
+            class_weights = class_weights / class_weights.sum() * num_classes
+
+            class_weights = [max(0.1, min(weight, 10)) for weight in class_weights]
+            
             self.data_config["class_weights"] = class_weights
             self.class_weights = class_weights
         else:
